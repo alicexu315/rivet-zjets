@@ -1,0 +1,82 @@
+dependent_variables:
+- header:
+    name: $\frac{1}{N_{\textrm{Z+jet}}} \frac{\textrm{d} N}{\textrm{d}r}$
+  qualifiers:
+  - name: RE
+    value: P P --> Z jet X
+  - name: SQRT(S)
+    units: TeV
+    value: 8.0
+  - name: ETARAP
+    value: 2.5 < $y_{\textrm{jet}}$ < 4.0
+  - name: jet radius
+    value: 0.5
+  - name: jet method
+    value: Anti-$k_{\textrm{T}}$
+  - name: jet pT
+    value: 50 < $p_{\textrm{T,jet}}$ < 100 GeV
+  values:
+  - errors:
+    - label: stat
+      symerror: 0.316
+    value: 28.1
+  - errors:
+    - label: stat
+      symerror: 0.32
+    value: 28.7
+  - errors:
+    - label: stat
+      symerror: 0.279
+    value: 21.9
+  - errors:
+    - label: stat
+      symerror: 0.244
+    value: 16.8
+  - errors:
+    - label: stat
+      symerror: 0.218
+    value: 13.3
+  - errors:
+    - label: stat
+      symerror: 0.196
+    value: 10.8
+  - errors:
+    - label: stat
+      symerror: 0.185
+    value: 9.62
+  - errors:
+    - label: stat
+      symerror: 0.173
+    value: 8.38
+  - errors:
+    - label: stat
+      symerror: 0.16
+    value: 7.18
+  - errors:
+    - label: stat
+      symerror: 0.13
+    value: 4.75
+independent_variables:
+- header:
+    name: $r$
+  values:
+  - high: 0.05
+    low: 0.0
+  - high: 0.1
+    low: 0.05
+  - high: 0.15
+    low: 0.1
+  - high: 0.2
+    low: 0.15
+  - high: 0.25
+    low: 0.2
+  - high: 0.3
+    low: 0.25
+  - high: 0.35
+    low: 0.3
+  - high: 0.4
+    low: 0.35
+  - high: 0.45
+    low: 0.4
+  - high: 0.5
+    low: 0.45

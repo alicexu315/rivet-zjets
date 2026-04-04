@@ -1,0 +1,50 @@
+Name: LHCB_2019_I1730448
+Year: 2019
+Summary: 'Measurement of charged hadron production in Z-tagged jets in proton-proton collisions at $\sqrt{s}$ = 8 TeV'
+Experiment: LHCB
+Collider: LHC
+InspireID: 1730448
+Status: UNVALIDATED
+Reentrant: false
+Authors:
+ - Alice Xu <alicexty.umich.edu>
+References:
+# - 'Example: Eur.Phys.J. C76 (2016) no.7, 392'
+# - 'Example: DOI:10.1140/epjc/s10052-016-4184-8'
+ - arXiv:1904.08878
+ - LHCb-PAPER-2019-012, CERN-EP-2019-065
+RunInfo:
+  'Proton-proton interactions at 8 TeV centre-of-mass energy.
+   $Z$ bosons are fully reconstructed from the $\mu^- \mu^+$ decay channel.
+   NOTE: this means that Z bosons should be undecayed in the event generator,
+   e.g. 23:mayDecay=no in Pythia, while other unstable particles are decayed as normal.'
+Beams: [p+, p+]
+Energies: [[4000,4000]]
+Luminosity_fb: 2.0
+Description:
+  'The LHCb Collaboration presents measurements of the longitudinal, transverse, and radial
+   distributions of charged hadrons in $Z$-jets using proton-proton data collected at a 
+   center-of-mass energy of $\sqrt{s} = 8$TeV. $Z$ bosons are fully reconstructed from the
+   $\mu^- \mu^+$ decay channel. Jets with transverse momentum $p_\mathrm{T,jet} > 20$ GeV are
+   reconstructed within the rapidity range $2.5 < y_\mathrm{jet} < 4.0$ using the anti-$k_\mathrm{T}$
+   algorithm with resolution paparmeter $R = 0.5$.'
+ValidationInfo:
+  'Validation used Pythia 8.244 with Rivet 3.1.11. The 4C tune was used (Tune:pp=5). Pythia curves
+   in the LHCb publication use the LHCb Tune, which is based on 4C. All QCD channels
+   were used (HardQCD:all=on) to generate events with a Z-boson at parton level (HadronLevel:all=off),
+   which was then hadronized. For simplicity, a single pTHat bin with PhaseSpace:pTHatMin=10 was used.'
+#ReleaseTests:
+# - $A my-hepmc-prefix :MODE=some_rivet_flag
+Keywords: [flavor physics, QCD, hard scattering, heavy quark production, jet physics]
+BibKey: LHCb-PAPER-2019-012
+BibTeX: '@article{LHCb-PAPER-2019-012,
+    title={Measurement of charged hadron production in Z-tagged jets in proton-proton collisions at $\sqrt{s}$ = 8 TeV}, 
+    author={R. Aaij and others},
+    collaboration={LHCb},
+    year={2019},
+    reportNumber={LHCb-PAPER-2019-012, CERN-EP-2019-065},
+    eprint={1904.08878},
+    archivePrefix={arXiv},
+    primaryClass={hep-ex},
+    doi={10.1103/arXiv.1904.08878}
+}'
