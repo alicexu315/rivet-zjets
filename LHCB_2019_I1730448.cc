@@ -22,7 +22,7 @@ namespace Rivet {
   class JetInfo : public fastjet::PseudoJet::UserInfoBase {
   public:
     JetInfo(const int &_pid) : pid(_pid) {};
-    int get_pid() {
+    int get_pid() const {
       return this->pid;
     }
   private:
@@ -53,12 +53,26 @@ namespace Rivet {
       // The basic final-state projection:
       // all final-state particles within the given eta acceptance
       Cut particle_selector = (Cuts::eta > ETA_MIN_PARTICLES) & (Cuts::eta < ETA_MAX_PARTICLES);
-      const FinalState fs(particle_selector);
+      //const FinalState fs(particle_selector);
+      const FinalState fs;
       declare(fs, "fs_particles");
+
+      // photons
+      IdentifiedFinalState photons(fs);
+      photons.acceptId(PID::PHOTON);
+      declare(photons, "photons");
+
+      // bare muons
+      IdentifiedFinalState bare_muons(fs);
+      bare_muons.acceptId(PID::MUON);
+      declare(bare_muons, "bare_muons");
+
+      // dressed muons
+      DressedLeptons dressed_muons(photons, bare_muons, 0.1);
+      declare(dressed_muons, "dressed_muons");
 
       // The final-state particles declared above are clustered using FastJet with
       // the anti-kT algorithm and a jet-radius parameter 0.5
-      // muons are included and neutrinos are excluded from the clustering
       //FastJets jetfs(fs, FastJets::ANTIKT, JET_R, JetAlg::Muons::ALL, JetAlg::Invisibles::NONE);
       //declare(jetfs, "jets");
 
@@ -127,35 +141,77 @@ namespace Rivet {
       Particles fs_particles = apply<FinalState>(event, "fs_particles").particles();
       for(const Particle& fs_particle : fs_particles) {
         fastjet::PseudoJet AliceJet = fs_particle.pseudojet();
-        JetInfo* jet_pid = new JetInfo(fs_particle.pid());
-        AliceJet.set_user_info(jet_pid);
-        trimmed_particles.push_back(fs_particle.pseudojet());
+        //JetInfo* jet_pid = new JetInfo(fs_particle.pid());
+        //AliceJet.set_user_info(jet_pid);
+        AliceJet.set_user_info_shared_ptr(fastjet::SharedPtr<fastjet::PseudoJet::UserInfoBase>(new JetInfo(fs_particle.pid())));
+
+        trimmed_particles.push_back(AliceJet);
       }
 
       JetDefinition jet_def(fastjet::antikt_algorithm, JET_R);
       ClusterSequence cs(trimmed_particles, jet_def);
       std::vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets());
 
-      // Retrieve *decayed* Z bosons
-      Particles decayed_Z_bosons = apply<UnstableParticles>(event, "decayed_Z_bosons").particles();
-      //if(DEBUG_LEVEL > 1) std::cout << "UnstableParticles applied" << std::endl;
-      Particles Z_bosons;  // Z bosons which decayed to muon antimuon
-      for (const Particle& decayed_Z_boson : decayed_Z_bosons) {
-        /*
-        Particles Z_boson_children = decayed_Z_boson.children(Cuts::OPEN);
-        std::cout << "Children: " << Z_boson_children.size() << endl;
-        std::cout << decayed_Z_boson.abspid() << std::endl;
-        if (Z_boson_children.size() == 2 &&
-          Z_boson_children[0].eta() > ETA_MIN_PARTICLES && Z_boson_children[0].eta() < ETA_MAX_PARTICLES &&
-          Z_boson_children[1].eta() > ETA_MIN_PARTICLES && Z_boson_children[1].eta() < ETA_MAX_PARTICLES) {
-            //(Z_boson_children[0].abspid() == PID::MUON  && Z_boson_children[1].abspid() == PID::MUON) ) {
-        */
-            Z_bosons.push_back(decayed_Z_boson);
-        //}
+      std::vector<FourMomentum> Z_bosons;  // Z bosons which decayed to muon antimuon
+      /*Particles muons;
+      for (const Particle& p : fs_particles) {
+        if (abs(p.abspid()) == PID::MUON) {
+          muons.push_back(p);
+          std::cout << "Children: " << muons.size() << endl;
+        }
+      }*/
+      const DressedLeptons& dls = apply<DressedLeptons>(event, "dressed_muons");
+      std::vector<DressedLepton> muons = dls.dressedLeptons();
+      /*for (size_t i = 0; i < muons.size(); i++) {
+          for (size_t j = i + 1; j < muons.size(); j++) {
+            const Particle& mu1 = muons[i];
+            const Particle& mu2 = muons[j];
+            //if (mu1.charge() * mu2.charge() >= 0) continue; // require opposite charge
+            if (mu1.charge() * mu2.charge() < 0) { // require opposite charge
+              FourMomentum Z_momentum = mu1.momentum() + mu2.momentum();
+              std::cout << "mu1 pT=" << mu1.pt() << " mu2 pT=" << mu2.pt() << " Z_mass=" << Z_momentum.mass() << std::endl;
+              if (Z_momentum.mass() > MASS_MIN_ZBOSONS && Z_momentum.mass() < MASS_MAX_ZBOSONS &&
+                  Z_momentum.eta() > ETA_MIN_PARTICLES && Z_momentum.eta() < ETA_MAX_PARTICLES) {
+                Z_bosons.push_back(Z_momentum);  // store the reconstructed Z
+              }
+            }
+          }
+      }*/
+      double best_diff = 1e9;
+      FourMomentum best_Z;
+
+      for (size_t i = 0; i < muons.size(); i++) {
+        for (size_t j = i + 1; j < muons.size(); j++) {
+
+          const Particle& mu1 = muons[i];
+          const Particle& mu2 = muons[j];
+
+          if (mu1.charge() * mu2.charge() >= 0) continue;
+
+          FourMomentum Z_momentum = mu1.momentum() + mu2.momentum();
+
+          std::cout << "muons: " << muons.size() << std::endl;
+          std::cout << "best Z mass: " << best_Z.mass()/GeV
+                    << " eta: " << best_Z.eta() << std::endl;
+
+          double diff = fabs(Z_momentum.mass() - 91.2*GeV);
+
+          if (diff < best_diff) {
+            best_diff = diff;
+            best_Z = Z_momentum;
+          }
+        }
       }
-      if (DEBUG_LEVEL > 1) std::cout << "Z_bosons push_back" << std::endl;
+
+      if (best_diff < 1e9 &&
+          best_Z.mass() > MASS_MIN_ZBOSONS &&
+          best_Z.mass() < MASS_MAX_ZBOSONS &&
+          best_Z.eta() > ETA_MIN_PARTICLES &&
+          best_Z.eta() < ETA_MAX_PARTICLES) {
+
+        Z_bosons.push_back(best_Z);
+      }
       if (Z_bosons.empty()) { vetoEvent; }
-      if (DEBUG_LEVEL > 1) std::cout << "Z bosons found" << std::endl;
 
 
       // Retrieve clustered jets, sorted by pT, with applied rapidity and pT cuts
@@ -165,21 +221,19 @@ namespace Rivet {
         //& (Cuts::pT > PT_MIN_JETS) & (Cuts::pT < PT_MAX_JETS);
       if (jets.empty()) { vetoEvent; }
 
-      if (DEBUG_LEVEL > 1) std::cout << "Jets found" << std::endl;
-
       // Create a vector of jets recoiling against Z bosons
-      Jets Z_jets;
+      /*Jets Z_jets;
       Particles Z_boson_matches;
       for (const PseudoJet& jet : jets) {
         //const Jet& jet = jets.front();
-        for(const Particle& Z_boson : Z_bosons) {
+        for(const FourMomentum& Z_boson : Z_bosons) {
           if (std::abs(Z_boson.phi()-jet.phi()) > (7*M_PI)/8 && std::abs(Z_boson.phi()-jet.phi()) < (9*M_PI)/8) {  // Jet is on the azimuthal away side of Z
             Z_jets.push_back(jet);
             Z_boson_matches.push_back(Z_boson);
           }
         }
       }
-      if (Z_jets.empty()) { vetoEvent; }
+      if (Z_jets.empty()) { vetoEvent; }*/
 
       if (DEBUG_LEVEL > 1) std::cout << "Z jets found" << std::endl;
 
@@ -187,25 +241,30 @@ namespace Rivet {
         // Fill histograms
       if (DEBUG_LEVEL > 1) std::cout << "Filling histograms" << std::endl;
 
-      for (long unsigned int i = 0; i < Z_jets.size(); i++) {
-        const Jet& Z_jet = Z_jets[i];
-        const Particle& Z_boson_match = Z_boson_matches[i];
-        //std::vector<PseudoJet> trimmed_constituents;
-        for (const PseudoJet& constituent : Z_jet.pseudojet().constituents()) {
-          JetInfo myinfo = constituent.user_info<JetInfo>();
-          std::cout << "PID: " << myinfo.get_pid() << std::endl;
-          if (((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
-              (std::sqrt(constituent.modp()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp()) < P_MAX_HADRONS) && (constituent.pt() > PT_MIN_HADRONS) &&
-              (Z_jet.pseudojet().delta_R(constituent) < 0.5)) {
-            double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
-            double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
-            double num_jt = std::sqrt(std::pow(Z_jet.pseudojet().py()*constituent.pz()-Z_jet.pseudojet().pz()*constituent.py(), 2.0) + std::pow(Z_jet.pseudojet().pz()*constituent.px()-Z_jet.pseudojet().px()*constituent.pz(), 2.0) + std::pow(Z_jet.pseudojet().px()*constituent.py()-Z_jet.pseudojet().py()*constituent.px(), 2.0));
-            double den_jt = std::sqrt(std::pow(Z_jet.pseudojet().px(), 2.0) + std::pow(Z_jet.pseudojet().py(), 2.0) + std::pow(Z_jet.pseudojet().pz(), 2.0));
-            _h[get_histo_name(Z_jet.pT(), true, false, false)]->fill(num_z / den_z); // Fill histogram with longitudinal momentum
-            _h[get_histo_name(Z_jet.pT(), false, true, false)]->fill(num_jt / den_jt); // Fill histogram with transverse momentum
-            _h[get_histo_name(Z_jet.pT(), false, false, true)]->fill(std::sqrt(std::pow(Z_jet.pseudojet().phi()-constituent.phi(), 2.0) + std::pow(Z_jet.pseudojet().rap()-constituent.rap(), 2.0))); // Fill histogram with radial profile distribution
+      for (const PseudoJet& jet : jets) {
+        std::cout << "jet pT=" << jet.pt() << " eta=" << jet.eta() << std::endl;
+        FourMomentum jet_mom(jet.px(), jet.py(), jet.pz(), jet.E());
+        for (const FourMomentum& Z_boson : Z_bosons) {
+          //if (std::abs(Z_boson.phi()-jet.phi()) > (7*M_PI)/8 && std::abs(Z_boson.phi()-jet.phi()) < (9*M_PI)/8) {  // Jet is on the azimuthal away side of Z
+          if (deltaPhi(Z_boson, jet_mom) > (7*M_PI)/8) {
+            for (const PseudoJet& constituent : jet.constituents()) {
+              //JetInfo myinfo = constituent.user_info<JetInfo>();
+              if (!constituent.has_user_info()) continue;
+              const JetInfo& myinfo = constituent.user_info<JetInfo>();
+              std::cout << "PID: " << myinfo.get_pid() << std::endl;
+              if (((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
+                  (constituent.modp() > P_MIN_HADRONS) && (constituent.modp() < P_MAX_HADRONS) && (constituent.pt() > PT_MIN_HADRONS) &&
+                  (jet.delta_R(constituent) < 0.5)) {
+                double num_z = jet.px()*constituent.px() + jet.py()*constituent.py() + jet.pz()*constituent.pz();
+                double den_z = jet.px()*jet.px() + jet.py()*jet.py() + jet.pz()*jet.pz();
+                double num_jt = std::sqrt(std::pow(jet.py()*constituent.pz()-jet.pz()*constituent.py(), 2.0) + std::pow(jet.pz()*constituent.px()-jet.px()*constituent.pz(), 2.0) + std::pow(jet.px()*constituent.py()-jet.py()*constituent.px(), 2.0));
+                double den_jt = std::sqrt(std::pow(jet.px(), 2.0) + std::pow(jet.py(), 2.0) + std::pow(jet.pz(), 2.0));
+                _h[get_histo_name(jet.perp(), true, false, false)]->fill(num_z / den_z); // Fill histogram with longitudinal momentum
+                _h[get_histo_name(jet.perp(), false, true, false)]->fill(num_jt / den_jt); // Fill histogram with transverse momentum
+                _h[get_histo_name(jet.perp(), false, false, true)]->fill(std::sqrt(std::pow(jet.phi()-constituent.phi(), 2.0) + std::pow(jet.rap()-constituent.rap(), 2.0))); // Fill histogram with radial profile distribution
+              }
+            }
           }
-          delete &myinfo;
         }
       }
       
@@ -260,7 +319,7 @@ namespace Rivet {
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Analysis parameters
 
-    const int DEBUG_LEVEL = 2;             // For some helpful debugging print functions. Between 0-2
+    const int DEBUG_LEVEL = 0;             // For some helpful debugging print functions. Between 0-2
 
     // Particle reconstruction
     const double ETA_MIN_PARTICLES = 2.;   // Min pseudorapidity of final-state particles
