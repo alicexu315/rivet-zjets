@@ -58,12 +58,12 @@ namespace Rivet {
       // The final-state particles declared above are clustered using FastJet with
       // the anti-kT algorithm and a jet-radius parameter 0.5
       // muons are included and neutrinos are excluded from the clustering
-      FastJets jetfs(fs, FastJets::ANTIKT, JET_R, JetAlg::Muons::ALL, JetAlg::Invisibles::NONE);
-      declare(jetfs, "jets");
+      //FastJets jetfs(fs, FastJets::ANTIKT, JET_R, JetAlg::Muons::ALL, JetAlg::Invisibles::NONE);
+      //declare(jetfs, "jets");
 
       Cut Z_boson_selector = particle_selector & (Cuts::abspid == PID::ZBOSON) &
-                             (Cuts::pT > PT_MIN_ZBOSONS) & (Cuts::pT < PT_MAX_ZBOSONS) &
-                             (Cuts::mass > MASS_MIN_ZBOSONS) & (Cuts::mass < MASS_MAX_ZBOSONS);
+                            (Cuts::pT > PT_MIN_ZBOSONS) & (Cuts::pT < PT_MAX_ZBOSONS) &
+                            (Cuts::mass > MASS_MIN_ZBOSONS) & (Cuts::mass < MASS_MAX_ZBOSONS);
 
       // Find *decayed* charged Z bosons from event
       const UnstableParticles decayed_Z_bosons(Z_boson_selector);
@@ -91,9 +91,20 @@ namespace Rivet {
     void analyze(const Event& event) {
       Particles fs_particles = apply<FinalState>(event, "fs_particles").particles();
 
-      //Retrieve *decayed* Z bosons
+      // DIY jet
+      std::vector<PseudoJet> trimmed_particles;
+      for(const Particle& fs_particle : fs_particles) {
+        fastjet::PseudoJet InfoJet = fs_particle.pseudojet();
+        InfoJet.set_user_info_shared_ptr(fastjet::SharedPtr<fastjet::PseudoJet::UserInfoBase>(new JetInfo(fs_particle.pid())));
+        trimmed_particles.push_back(InfoJet);
+      }
+      JetDefinition jet_def(fastjet::antikt_algorithm, JET_R);
+      ClusterSequence cs(trimmed_particles, jet_def);
+      std::vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets());
+
+      // Retrieve *decayed* Z bosons
       Particles decayed_Z_bosons = apply<UnstableParticles>(event, "decayed_Z_bosons").particles();
-      if (DEBUG_LEVEL > 0) std::cout << "Unstable Z count = " << decayed_Z_bosons.size() << std::endl;
+      //if (DEBUG_LEVEL > 0) std::cout << "Unstable Z count = " << decayed_Z_bosons.size() << std::endl;
       Particles Z_bosons;  // Z bosons which decayed to mu+ mu-
       for (const Particle& decayed_Z_boson : decayed_Z_bosons) {
         Z_bosons.push_back(decayed_Z_boson);
@@ -112,9 +123,11 @@ namespace Rivet {
       if (Z_bosons.empty()) { vetoEvent; }
 
       // Retrieve clustered jets, sorted by pT, with applied rapidity and pT cuts
-      Cut jet_selector = (Cuts::eta > ETA_MIN_JETS) & (Cuts::eta < ETA_MAX_JETS) &
-                         (Cuts::pT > PT_MIN_JETS) & (Cuts::pT < PT_MAX_JETS);
-      Jets jets = apply<FastJets>(event, "jets").jetsByPt(jet_selector);
+      //Cut jet_selector = (Cuts::eta > ETA_MIN_JETS) & (Cuts::eta < ETA_MAX_JETS) &
+                         //(Cuts::pT > PT_MIN_JETS) & (Cuts::pT < PT_MAX_JETS);
+      //Jets jets = apply<FastJets>(event, "jets").jetsByPt(jet_selector);
+      fastjet::Selector jet_selector = fastjet::SelectorPtRange(PT_MIN_JETS, PT_MAX_JETS) && fastjet::SelectorEtaRange(ETA_MIN_JETS, ETA_MAX_JETS);
+      jets = jet_selector(jets);
       if (jets.empty()) { vetoEvent; }
 
       // Create a vector of jets that are back to back with a Z boson
@@ -123,6 +136,9 @@ namespace Rivet {
         for (const Particle& Z_boson : Z_bosons) {
           if (std::abs(Z_boson.phi()-jet.phi()) > (7*M_PI)/8 && std::abs(Z_boson.phi()-jet.phi()) < (9*M_PI)/8) {
             Z_jets.push_back(jet);
+            if (DEBUG_LEVEL > 0) std::cout << "deltaphi: " << deltaPhi(Z_boson, jet) << std::endl;
+            if (DEBUG_LEVEL > 0) std::cout << "jet eta: " << jet.eta() << std::endl;
+            if (DEBUG_LEVEL > 0) std::cout << "jet pt: " << jet.pT() << std::endl;
           }
         }
       }
@@ -135,10 +151,12 @@ namespace Rivet {
       // Loop over jets and apply operations & fill histograms
       for (const Jet& Z_jet : Z_jets) {
         for (const PseudoJet& constituent : Z_jet.pseudojet().constituents()) {
-
+          const JetInfo& myinfo = constituent.user_info<JetInfo>();
         // Fill histograms
         if (DEBUG_LEVEL > 1) std::cout << "Filling histograms" << std::endl;
-        if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) && (constituent.pt() > PT_MIN_HADRONS) &&
+        if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) &&
+            ((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
+            (constituent.pt() > PT_MIN_HADRONS) &&
             (Z_jet.pseudojet().delta_R(constituent) < 0.5)) {
           double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
           double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
