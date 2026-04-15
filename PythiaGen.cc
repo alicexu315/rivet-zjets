@@ -123,8 +123,8 @@ int main(int argc, char* argv[]) {
         if (DEBUG_LEVEL > 0) std::cout << "P: Z boson found" << std::endl;
         
         // If the particle is not in desired kinematic region, skip event & regenerate
-        const double MIN_RAPIDITY_ACCEPTED = 1.5;
-        const double MAX_RAPIDITY_ACCEPTED = 5.;
+        const double MIN_RAPIDITY_ACCEPTED = 2.;
+        const double MAX_RAPIDITY_ACCEPTED = 4.5;
         bool rapidity_satisfied = false;
         for (int i = 0; i < satisfier_ips.size(); i++) {
           double satisfier_rapidity = pythia.event[satisfier_ips[i]].y();
