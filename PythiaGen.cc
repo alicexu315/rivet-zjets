@@ -95,6 +95,24 @@ int main(int argc, char* argv[]) {
             break;
         }
 
+        for (int i = 0; i < pythia.event.size(); ++i) {
+            if (pythia.event[i].id() == 23) {
+                std::cout << "Found Z at index " << i << std::endl;
+                std::cout << "  status: " << pythia.event[i].status() << std::endl;
+                std::cout << "  daughters: "
+                        << pythia.event[i].daughter1() << " "
+                        << pythia.event[i].daughter2() << std::endl;
+
+                if (pythia.event[i].daughter1() > 0) {
+                    for (int d = pythia.event[i].daughter1();
+                        d <= pythia.event[i].daughter2(); ++d) {
+                        std::cout << "    -> daughter PID: "
+                                << pythia.event[d].id() << std::endl;
+                    }
+                }
+            }
+        }
+
         /* Generate events until you get one with a desired particle.
         const int DESIRED_PID = 5;  // b quark
         bool desired_parton_found = false;
