@@ -104,9 +104,10 @@ namespace Rivet {
 
       // Retrieve *decayed* Z bosons
       Particles decayed_Z_bosons = apply<UnstableParticles>(event, "decayed_Z_bosons").particles();
-      //if (DEBUG_LEVEL > 0) std::cout << "Unstable Z count = " << decayed_Z_bosons.size() << std::endl;
+      if (DEBUG_LEVEL > 0) std::cout << "Unstable Z count = " << decayed_Z_bosons.size() << std::endl;
       Particles Z_bosons;  // Z bosons which decayed to mu+ mu-
       for (const Particle& decayed_Z_boson : decayed_Z_bosons) {
+        std::cout << "Children: " << decayed_Z_boson.children().size() << std::endl;
         Z_bosons.push_back(decayed_Z_boson);
         /*bool has_mup = false, has_mum = false;
         Particles Z_boson_children = decayed_Z_boson.children(Cuts::OPEN);
@@ -134,7 +135,8 @@ namespace Rivet {
       Jets Z_jets;
       for (const Jet& jet : jets) {
         for (const Particle& Z_boson : Z_bosons) {
-          if (std::abs(Z_boson.phi()-jet.phi()) > (7*M_PI)/8 && std::abs(Z_boson.phi()-jet.phi()) < (9*M_PI)/8) {
+          //if (std::abs(Z_boson.phi()-jet.phi()) > (7*M_PI)/8 && std::abs(Z_boson.phi()-jet.phi()) < (9*M_PI)/8) {
+          if (deltaPhi(Z_boson, jet) > (7*M_PI)/8) {
             Z_jets.push_back(jet);
             if (DEBUG_LEVEL > 0) std::cout << "deltaphi: " << deltaPhi(Z_boson, jet) << std::endl;
             if (DEBUG_LEVEL > 0) std::cout << "jet eta: " << jet.eta() << std::endl;
@@ -156,15 +158,15 @@ namespace Rivet {
         if (DEBUG_LEVEL > 1) std::cout << "Filling histograms" << std::endl;
         if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) &&
             ((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
-            (constituent.pt() > PT_MIN_HADRONS) &&
-            (Z_jet.pseudojet().delta_R(constituent) < 0.5)) {
+            (constituent.pt() > PT_MIN_HADRONS)) {//&&
+            //(Z_jet.pseudojet().delta_R(constituent) < 0.5)) {
           double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
           double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
           double num_jt = std::sqrt(std::pow(Z_jet.pseudojet().py()*constituent.pz()-Z_jet.pseudojet().pz()*constituent.py(), 2.0) + std::pow(Z_jet.pseudojet().pz()*constituent.px()-Z_jet.pseudojet().px()*constituent.pz(), 2.0) + std::pow(Z_jet.pseudojet().px()*constituent.py()-Z_jet.pseudojet().py()*constituent.px(), 2.0));
           double den_jt = std::sqrt(std::pow(Z_jet.pseudojet().px(), 2.0) + std::pow(Z_jet.pseudojet().py(), 2.0) + std::pow(Z_jet.pseudojet().pz(), 2.0));
           _h[get_histo_name(Z_jet.pT(), true, false, false)]->fill(num_z / den_z); // Fill histogram with longitudinal momentum
           _h[get_histo_name(Z_jet.pT(), false, true, false)]->fill(num_jt / den_jt); // Fill histogram with transverse momentum
-          _h[get_histo_name(Z_jet.pT(), false, false, true)]->fill(std::sqrt(std::pow(Z_jet.pseudojet().phi()-constituent.phi(), 2.0) + std::pow(Z_jet.pseudojet().rap()-constituent.rap(), 2.0))); // Fill histogram with radial profile distribution
+          _h[get_histo_name(Z_jet.pT(), false, false, true)]->fill(std::sqrt(std::pow(Z_jet.pseudojet().delta_phi_to(constituent), 2.0) + std::pow(Z_jet.pseudojet().rap()-constituent.rap(), 2.0))); // Fill histogram with radial profile distribution
           }
         }
       }
@@ -229,7 +231,7 @@ namespace Rivet {
 
     // Jet reconstruction
     const double JET_R = 0.5;              // Jet resolution parameter for anti-kT
-    const double ETA_MIN_JETS = 2.5;  // Min rapidity of constructed B-jets
+    const double ETA_MIN_JETS = 2.5;  // Min rapidity of constructed Z-jets
     const double ETA_MAX_JETS = 4.;  // Max "
     const double PT_MIN_JETS = 20.;        // Min jet transverse momentum
     const double PT_MAX_JETS = 100.;       // Max "
