@@ -5,7 +5,7 @@
 ! The changes here are illustrative, not always physics-motivated.
 
 ! 1) Settings that will be used in a main program.
-Main:numberOfEvents = 5000        ! number of events to generate
+Main:numberOfEvents = 10000        ! number of events to generate
 Main:timesAllowErrors = 3          ! abort run after this many flawed events
 
 ! 2) Settings related to output in init(), next() and stat().
@@ -55,23 +55,24 @@ Tune:pp = 5                        ! use Tune 4C
 #ParticleDecays:limitTau0 = on      ! set long-lived particle stable ...
 #ParticleDecays:tau0Max = 10        ! ... if c*tau0 > 10 mm
 
-23:onMode = off
-#23:mayDecay = no                  ! turn off decays of Z bosons
+23:mayDecay = no                  ! turn off decays of Z bosons
 23:onIfMatch = 13 -13             ! force Z bosons to decay to dimuons
-23:mayDecay = yes
+#23:mayDecay = yes
 
 #521:mayDecay = yes                 ! turn on decays of B+ mesons
 #521:offIfMatch = 443 321           ! ... except for those with J/Psi K children
 
 #Specifications from supplemental material
 
-PDF:pSet = 8
+#PDF:pSet = 8
 
-SpaceShower:rapidityOrder = off
-WeakBosonAndParton:qg2gmZq = on
+#SpaceShower:rapidityOrder = off
+#WeakBosonAndParton:qg2gmZq = on
 WeakBosonAndParton:qqbar2gmZg = on
 WeakZ0:gmZmode = 2
+#23:onMode = off
 #23:onIfAny = 13
+#23:onIfMatch = 13 -13
 SigmaProcess:alphaSorder = 2
 
 MultipartonInteractions:bProfile = 1
@@ -105,3 +106,4 @@ StringFlav:mesonBL1S1J1 = 0.2986
 StringFlav:mesonBL1S1J2 = 0.2986
 StringFlav:etaSup = 1.
 StringFlav:etaPrimeSup = 0.4
+

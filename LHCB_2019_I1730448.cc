@@ -12,8 +12,6 @@
 #include "fastjet/JetDefinition.hh"
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/Selector.hh"       // For creating Filter for jet Projector
-//#include "fastjet/tools/Filter.hh"   // For applying reclustering/grooming in Projector
-//#include "fastjet/contrib/LundGenerator.hh"   // For Soft Drop grooming
 
 namespace Rivet {
   
@@ -158,8 +156,9 @@ namespace Rivet {
         if (DEBUG_LEVEL > 1) std::cout << "Filling histograms" << std::endl;
         if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) &&
             ((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
-            (constituent.pt() > PT_MIN_HADRONS)) {//&&
-            //(Z_jet.pseudojet().delta_R(constituent) < 0.5)) {
+            (constituent.pt() > PT_MIN_HADRONS) &&
+            //(Z_jet.pseudojet().delta_R(constituent) < 0.5))
+            (std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2.0) < 0.5)) {
           double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
           double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
           double num_jt = std::sqrt(std::pow(Z_jet.pseudojet().py()*constituent.pz()-Z_jet.pseudojet().pz()*constituent.py(), 2.0) + std::pow(Z_jet.pseudojet().pz()*constituent.px()-Z_jet.pseudojet().px()*constituent.pz(), 2.0) + std::pow(Z_jet.pseudojet().px()*constituent.py()-Z_jet.pseudojet().py()*constituent.px(), 2.0));
