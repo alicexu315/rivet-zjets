@@ -32,7 +32,7 @@ Description:
 ValidationInfo:
   'Validation used Pythia 8.244 with Rivet 3.1.11. The 4C tune was used (Tune:pp=5). Pythia curves
    in the LHCb publication use the LHCb Tune, which is based on 4C. Z bosons are stopped from decaying (23:mayDecay = no)
-   and then forced to decay to muons (23:onIfMatch = 13 -13) For simplicity, a single pTHat bin with PhaseSpace:pTHatMin=20 was used.'
+   and forced to decay to muons (23:onIfMatch = 13 -13) For simplicity, a single pTHat bin with PhaseSpace:pTHatMin=20 was used.'
 #ReleaseTests:
 # - $A my-hepmc-prefix :MODE=some_rivet_flag
 Keywords: [QCD, hard scattering, jet physics]
