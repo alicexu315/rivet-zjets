@@ -1,0 +1,142 @@
+---
+additional_resources:
+- description: Created with hepdata_lib 0.20.0
+  location: https://doi.org/10.5281/zenodo.1217998
+comment: ''
+data_license:
+  description: CC0 enables reusers to distribute, remix, adapt, and build upon the
+    material in any medium or format, with no conditions.
+  name: CC0
+  url: https://creativecommons.org/publicdomain/zero/1.0/
+---
+data_file: table_0.yaml
+description: 'Distributions of the longitudinal momentum fraction of the hadron with
+  respect to the jet.
+
+  $20 < p_{\textrm{T,jet}} < 30$ GeV'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 5a
+name: Table 0
+---
+data_file: table_1.yaml
+description: 'Distributions of the longitudinal momentum fraction of the hadron with
+  respect to the jet.
+
+  $30 < p_{\textrm{T,jet}} < 50$ GeV'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 5b
+name: Table 1
+---
+data_file: table_2.yaml
+description: 'Distributions of the longitudinal momentum fraction of the hadron with
+  respect to the jet.
+
+  $50 < p_{\textrm{T,jet}} < 100$ GeV'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 5c
+name: Table 2
+---
+data_file: table_3.yaml
+description: 'Distributions of the transverse momentum of charged hadrons with respect
+  to the jet axis.
+
+  $20 < p_{\textrm{T,jet}} < 30$ GeV'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 6a
+name: Table 3
+---
+data_file: table_4.yaml
+description: 'Distributions of the transverse momentum of charged hadrons with respect
+  to the jet axis.
+
+  $30 < p_{\textrm{T,jet}} < 50$ GeV'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 6b
+name: Table 4
+---
+data_file: table_5.yaml
+description: 'Distributions of the transverse momentum of charged hadrons with respect
+  to the jet axis.
+
+  $50 < p_{\textrm{T,jet}} < 100$ GeV'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 6c
+name: Table 5
+---
+data_file: table_6.yaml
+description: 'Radial profile distributions of hadrons with respect to the jet axis.
+
+  $20 < p_{\textrm{T,jet}} < 30$ GeV.'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 7a
+name: Table 6
+---
+data_file: table_7.yaml
+description: 'Radial profile distributions of hadrons with respect to the jet axis.
+
+  $30 < p_{\textrm{T,jet}} < 50$ GeV.'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 7b
+name: Table 7
+---
+data_file: table_8.yaml
+description: 'Radial profile distributions of hadrons with respect to the jet axis.
+
+  $50 < p_{\textrm{T,jet}} < 100$ GeV.'
+keywords:
+- name: reactions
+  values:
+  - P P --> Z jet X
+- name: cmenergies
+  values:
+  - '8000.'
+location: Figure 7c
+name: Table 8

@@ -1,0 +1,43 @@
+#Specifications from supplemental material
+
+#PDF:pSet = 8
+
+#SpaceShower:rapidityOrder = off
+#WeakBosonAndParton:qg2gmZq = on
+#WeakBosonAndParton:qqbar2gmZg = on
+#WeakZ0:gmZmode = 2
+#23:onMode = off
+23:onIfAny = 13
+SigmaProcess:alphaSorder = 2
+
+MultipartonInteractions:bProfile = 1
+MultipartonInteractions:ecmRef = 7000
+MultipartonInteractions:pT0Ref = 2.88
+MultipartonInteractions:ecmPow = 0.238
+
+StringFlav:mesonUDvector = 0.6
+StringFlav:mesonSvector = 0.6
+StringFlav:mesonCvector = 3.0
+StringFlav:mesonBvector = 3.0
+StringFlav:probStoUD = 0.30
+StringFlav:probQQtoQ = 0.10
+StringFlav:probSQtoQQ = 0.4
+StringFlav:probQQ1toQQ0 = 0.05
+StringFlav:mesonUDL1S0J1 = 0.0989
+StringFlav:mesonUDL1S1J0 = 0.0132
+StringFlav:mesonUDL1S1J1 = 0.0597
+StringFlav:mesonUDL1S1J2 = 0.0597
+StringFlav:mesonSL1S0J1 = 0.0989
+StringFlav:mesonSL1S1J0 = 0.0132
+StringFlav:mesonSL1S1J1 = 0.0597
+StringFlav:mesonSL1S1J2 = 0.0597
+StringFlav:mesonCL1S0J1 = 0.0990
+StringFlav:mesonCL1S1J0 = 0.0657
+StringFlav:mesonCL1S1J1 = 0.2986
+StringFlav:mesonCL1S1J2 = 0.2986
+StringFlav:mesonBL1S0J1 = 0.0990
+StringFlav:mesonBL1S1J0 = 0.0657
+StringFlav:mesonBL1S1J1 = 0.2986
+StringFlav:mesonBL1S1J2 = 0.2986
+StringFlav:etaSup = 1.
+StringFlav:etaPrimeSup = 0.4
