@@ -113,18 +113,6 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        /* Generate events until you get one with a desired particle.
-        const int DESIRED_PID = 5;  // b quark
-        bool desired_parton_found = false;
-        for (int iParticle = 0; iParticle < pythia.event.size(); iParticle++) {
-          if (pythia.event[iParticle].idAbs() == DESIRED_PID) {
-            desired_parton_found = true;
-            break;
-          }
-        }
-        if (!desired_parton_found) continue;
-        */
-
         // Update hadronization.
         Pythia8::Event savedEvent = pythia.event;
         bool hstatus = pythia.forceHadronLevel();

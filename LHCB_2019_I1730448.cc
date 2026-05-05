@@ -15,6 +15,7 @@
 
 namespace Rivet {
   
+  // Attaches constituent PID to a PseudoJet
   class JetInfo : public fastjet::PseudoJet::UserInfoBase {
   public:
     JetInfo(const int &_pid) : pid(_pid) {};
@@ -25,7 +26,7 @@ namespace Rivet {
     int pid = -999;
   };
 
-  /// @brief Add a short analysis description here
+  /// @brief pp collisions at 8 TeV for charged particles in LHCb acceptance
   class LHCB_2019_I1730448 : public Analysis {
   public:
 
@@ -53,12 +54,6 @@ namespace Rivet {
       const FinalState fs(particle_selector);
       declare(fs, "fs_particles");
 
-      // The final-state particles declared above are clustered using FastJet with
-      // the anti-kT algorithm and a jet-radius parameter 0.5
-      // muons are included and neutrinos are excluded from the clustering
-      //FastJets jetfs(fs, FastJets::ANTIKT, JET_R, JetAlg::Muons::ALL, JetAlg::Invisibles::NONE);
-      //declare(jetfs, "jets");
-
       Cut Z_boson_selector = particle_selector & (Cuts::abspid == PID::ZBOSON) &
                             (Cuts::pT > PT_MIN_ZBOSONS) & (Cuts::pT < PT_MAX_ZBOSONS) &
                             (Cuts::mass > MASS_MIN_ZBOSONS) & (Cuts::mass < MASS_MAX_ZBOSONS);
@@ -66,9 +61,6 @@ namespace Rivet {
       // Find *decayed* charged Z bosons from event
       const UnstableParticles decayed_Z_bosons(Z_boson_selector);
       declare(decayed_Z_bosons, "decayed_Z_bosons");
-
-      // Missing momentum
-      declare(MissingMomentum(fs), "MET");
 
       // Book histograms
       for (int i = 0; i < N_PT_BIN_EDGES - 1; i++) {
@@ -89,7 +81,8 @@ namespace Rivet {
     void analyze(const Event& event) {
       Particles fs_particles = apply<FinalState>(event, "fs_particles").particles();
 
-      // DIY jet
+      // The final-state particles declared above are clustered using FastJet with
+      // the anti-kT algorithm and a jet-radius parameter 0.5
       std::vector<PseudoJet> trimmed_particles;
       for(const Particle& fs_particle : fs_particles) {
         fastjet::PseudoJet InfoJet = fs_particle.pseudojet();
@@ -122,9 +115,6 @@ namespace Rivet {
       if (Z_bosons.empty()) { vetoEvent; }
 
       // Retrieve clustered jets, sorted by pT, with applied rapidity and pT cuts
-      //Cut jet_selector = (Cuts::eta > ETA_MIN_JETS) & (Cuts::eta < ETA_MAX_JETS) &
-                         //(Cuts::pT > PT_MIN_JETS) & (Cuts::pT < PT_MAX_JETS);
-      //Jets jets = apply<FastJets>(event, "jets").jetsByPt(jet_selector);
       fastjet::Selector jet_selector = fastjet::SelectorPtRange(PT_MIN_JETS, PT_MAX_JETS) && fastjet::SelectorEtaRange(ETA_MIN_JETS, ETA_MAX_JETS);
       jets = jet_selector(jets);
       if (jets.empty()) { vetoEvent; }
@@ -133,7 +123,6 @@ namespace Rivet {
       Jets Z_jets;
       for (const Jet& jet : jets) {
         for (const Particle& Z_boson : Z_bosons) {
-          //if (std::abs(Z_boson.phi()-jet.phi()) > (7*M_PI)/8 && std::abs(Z_boson.phi()-jet.phi()) < (9*M_PI)/8) {
           if (deltaPhi(Z_boson, jet) > (7*M_PI)/8) {
             Z_jets.push_back(jet);
             if (DEBUG_LEVEL > 0) std::cout << "deltaphi: " << deltaPhi(Z_boson, jet) << std::endl;
@@ -157,7 +146,6 @@ namespace Rivet {
         if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) &&
             ((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
             (constituent.pt() > PT_MIN_HADRONS) &&
-            //(Z_jet.pseudojet().delta_R(constituent) < 0.5))
             (std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2.0) < 0.5)) {
           double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
           double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
@@ -185,13 +173,6 @@ namespace Rivet {
         normalize(_h["unfold1d_jt_" + pT_name]);  // HEPData Table 3-5
         normalize(_h["unfold1d_r_" + pT_name]);  // HEPData Table 6-8
       }
-
-      /*
-      normalize(_h["XXXX"]); // normalize to unity
-      normalize(_h["YYYY"], crossSection()/picobarn); // normalize to generated cross-section in pb (no cuts)
-      scale(_h["ZZZZ"], crossSection()/picobarn/sumW()); // norm to generated cross-section in pb (after cuts)
-      */
-
       return;
     }
 
@@ -222,32 +203,29 @@ namespace Rivet {
     /////////////////////////////////////////////////////////////////////////////////////////////////
     // Analysis parameters
 
-    const int DEBUG_LEVEL = 1;             // For some helpful debugging print functions. Between 0-2
+    const int DEBUG_LEVEL = 0;             // For some helpful debugging print functions. Between 0-2
 
     // Particle reconstruction
     const double ETA_MIN_PARTICLES = 2.;   // Min pseudorapidity of final-state particles
-    const double ETA_MAX_PARTICLES = 4.5;   // Max "
+    const double ETA_MAX_PARTICLES = 4.5;  // Max "
 
     // Jet reconstruction
     const double JET_R = 0.5;              // Jet resolution parameter for anti-kT
-    const double ETA_MIN_JETS = 2.5;  // Min rapidity of constructed Z-jets
-    const double ETA_MAX_JETS = 4.;  // Max "
+    const double ETA_MIN_JETS = 2.5;       // Min rapidity of constructed Z-jets
+    const double ETA_MAX_JETS = 4.;        // Max "
     const double PT_MIN_JETS = 20.;        // Min jet transverse momentum
     const double PT_MAX_JETS = 100.;       // Max "
 
-    // HF reconstruction
-    const std::vector<PdgId> CH_B_MESON_PID = { PID::BPLUS, PID::BMINUS };
-
     // Z Boson
-    const double MASS_MIN_ZBOSONS = 60.;
-    const double MASS_MAX_ZBOSONS = 120.;
-    const double PT_MIN_ZBOSONS = 0.;
-    const double PT_MAX_ZBOSONS = 100.;
+    const double MASS_MIN_ZBOSONS = 60.;   // Min invariant mass of Z bosons
+    const double MASS_MAX_ZBOSONS = 120.;  // Max "
+    const double PT_MIN_ZBOSONS = 0.;      // Min Z boson transverse momentum
+    const double PT_MAX_ZBOSONS = 100.;    // Max "
 
     // Charged Hadron
-    const double P_MIN_HADRONS = 4.;
-    const double P_MAX_HADRONS = 1000.;
-    const double PT_MIN_HADRONS = 0.25;
+    const double P_MIN_HADRONS = 4.;       // Min momentum of charged hadrons
+    const double P_MAX_HADRONS = 1000.;    // Max "
+    const double PT_MIN_HADRONS = 0.25;    // Min transverse momentum of charged hadrons
 
     // Jet pT bin edges
     const int N_PT_BIN_EDGES = 4;
