@@ -2,8 +2,8 @@ PythiaGen
 *.so
 *.log
 *.tar.gz
-old-plots
-pythia_paper
-rivet-files
-rivet-plots
+old-plots/
+pythia_paper/
+rivet-files/
+rivet-plots/
 backup
