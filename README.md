@@ -1,4 +1,4 @@
-# Rivet routine for the B-jet mass analysis
+# Rivet routine for the Z-tagged jet analysis
 
 First, compile the Rivet routine into a `RivetAnalysis.so` file:
 ```
