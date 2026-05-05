@@ -1,6 +1,9 @@
 PythiaGen
 *.so
 *.log
-ZJet_hadronization_ana_notev6.pdf
-LHCB_2019_IBAD.cc
-LHCB_2019_I1730448_OG.CC
+*.tar.gz
+old-plots
+pythia_paper
+rivet-files
+rivet-plots
+backup
