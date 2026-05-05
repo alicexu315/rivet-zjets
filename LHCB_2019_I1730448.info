@@ -9,10 +9,11 @@ Reentrant: false
 Authors:
  - Alice Xu <alicexty.umich.edu>
 References:
-# - 'Example: Eur.Phys.J. C76 (2016) no.7, 392'
-# - 'Example: DOI:10.1140/epjc/s10052-016-4184-8'
+ - Phys. Rev. Lett. 123 (2019) 232001
+ - DOI:10.1103/PhysRevLett.123.232001
  - arXiv:1904.08878
  - LHCb-PAPER-2019-012, CERN-EP-2019-065
+ - HEPData:https://www.hepdata.net/record/167266
 RunInfo:
   'Proton-proton interactions at 8 TeV centre-of-mass energy.
    $Z$ bosons are fully reconstructed from the $\mu^- \mu^+$ decay channel.
@@ -46,5 +47,5 @@ BibTeX: '@article{LHCb-PAPER-2019-012,
     eprint={1904.08878},
     archivePrefix={arXiv},
     primaryClass={hep-ex},
-    doi={10.1103/arXiv.1904.08878}
+    doi={10.1103/PhysRevLett.123.232001}
 }'
