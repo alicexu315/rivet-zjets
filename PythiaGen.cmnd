@@ -35,9 +35,6 @@ Beams:eCM = 8000.                 ! CM energy of collision
 ! 5a) Pick processes and kinematics cuts.
 ! Colour singlet charmonium production of J/psi and chi_c.
 HadronLevel:all      = on          ! disable steps after parton-level
-#HardQCD:all         = on
-#HardQCD:gg2bbbar    = on
-#HardQCD:qqbar2bbbar = on
 PhaseSpace:pTHatMin = 20.          ! minimum pT of hard process
 WeakBosonAndParton:qqbar2gmZg = on
 WeakBosonAndParton:qg2gmZq = on
@@ -51,28 +48,17 @@ WeakBosonAndParton:qg2gmZq = on
 ! 6) Other settings. Can be expanded as desired.
 ! Note: may overwrite some of the values above, so watch out.
 Tune:pp = 5                        ! use Tune 4C
-#Tune:pp = 6                        ! use Tune 4Cx
-#ParticleDecays:limitTau0 = on      ! set long-lived particle stable ...
-#ParticleDecays:tau0Max = 10        ! ... if c*tau0 > 10 mm
 
 23:mayDecay = no                  ! turn off decays of Z bosons
 23:onIfMatch = 13 -13             ! force Z bosons to decay to dimuons
-#23:mayDecay = yes
-
-#521:mayDecay = yes                 ! turn on decays of B+ mesons
-#521:offIfMatch = 443 321           ! ... except for those with J/Psi K children
+#23:onIfAny = 13
 
 #Specifications from supplemental material
 
-#PDF:pSet = 8
+PDF:pSet = 8
 
 #SpaceShower:rapidityOrder = off
-#WeakBosonAndParton:qg2gmZq = on
-WeakBosonAndParton:qqbar2gmZg = on
 WeakZ0:gmZmode = 2
-#23:onMode = off
-#23:onIfAny = 13
-#23:onIfMatch = 13 -13
 SigmaProcess:alphaSorder = 2
 
 MultipartonInteractions:bProfile = 1

@@ -31,12 +31,11 @@ Description:
    algorithm with resolution paparmeter $R = 0.5$.'
 ValidationInfo:
   'Validation used Pythia 8.244 with Rivet 3.1.11. The 4C tune was used (Tune:pp=5). Pythia curves
-   in the LHCb publication use the LHCb Tune, which is based on 4C. All QCD channels
-   were used (HardQCD:all=on) to generate events with a Z-boson at parton level (HadronLevel:all=off),
-   which was then hadronized. For simplicity, a single pTHat bin with PhaseSpace:pTHatMin=10 was used.'
+   in the LHCb publication use the LHCb Tune, which is based on 4C. Z bosons are stopped from decaying (23:mayDecay = no)
+   and then forced to decay to muons (23:onIfMatch = 13 -13) For simplicity, a single pTHat bin with PhaseSpace:pTHatMin=20 was used.'
 #ReleaseTests:
 # - $A my-hepmc-prefix :MODE=some_rivet_flag
-Keywords: [flavor physics, QCD, hard scattering, heavy quark production, jet physics]
+Keywords: [QCD, hard scattering, jet physics]
 BibKey: LHCb-PAPER-2019-012
 BibTeX: '@article{LHCb-PAPER-2019-012,
     title={Measurement of charged hadron production in Z-tagged jets in proton-proton collisions at $\sqrt{s}$ = 8 TeV}, 

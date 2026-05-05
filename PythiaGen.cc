@@ -7,7 +7,7 @@
 // To use:  (replace elesser with your username)
 // $ mkfifo /tmp/elesser/PythiaFIFO
 // $ ./PythiaGen PythiaGen.cmnd /tmp/elesser/PythiaFIFO > PythiaOutput.log 2>&1 &
-// $ rivet --pwd --analysis=LHCB_2025_I2922449 /tmp/elesser/PythiaFIFO
+// $ rivet --pwd --analysis=LHCB_2019_I1730448 /tmp/elesser/PythiaFIFO
 
 #include <iostream>
 #include "Pythia8/Pythia.h"
