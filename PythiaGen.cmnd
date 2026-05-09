@@ -48,10 +48,10 @@ WeakBosonAndParton:qg2gmZq = on
 ! 6) Other settings. Can be expanded as desired.
 ! Note: may overwrite some of the values above, so watch out.
 Tune:pp = 5                        ! use Tune 4C
-
-23:mayDecay = no                  ! turn off decays of Z bosons
-23:onIfMatch = 13 -13             ! force Z bosons to decay to dimuons
-#23:onIfAny = 13
+    
+23:mayDecay = yes
+23:onMode = off
+23:onIfAny = 13                    ! force Z bosons to decay to dimuons
 
 #Specifications from supplemental material
 

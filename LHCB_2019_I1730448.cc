@@ -8,7 +8,7 @@
 #include "Rivet/Projections/DressedLeptons.hh"
 #include "Rivet/Projections/MissingMomentum.hh"
 #include "Rivet/Projections/DirectFinalState.hh"
-#include "Rivet/Projections/UnstableParticles.hh"
+#include "Rivet/Projections/ZFinder.hh"
 #include "fastjet/JetDefinition.hh"
 #include "fastjet/ClusterSequence.hh"
 #include "fastjet/Selector.hh"       // For creating Filter for jet Projector
@@ -58,9 +58,9 @@ namespace Rivet {
                             (Cuts::pT > PT_MIN_ZBOSONS) & (Cuts::pT < PT_MAX_ZBOSONS) &
                             (Cuts::mass > MASS_MIN_ZBOSONS) & (Cuts::mass < MASS_MAX_ZBOSONS);
 
-      // Find *decayed* charged Z bosons from event
-      const UnstableParticles decayed_Z_bosons(Z_boson_selector);
-      declare(decayed_Z_bosons, "decayed_Z_bosons");
+      // Find *decayed* Z bosons from dimuon children
+      ZFinder zfinder(fs, particle_selector, PID::MUON, MASS_MIN_ZBOSONS, MASS_MAX_ZBOSONS, 0.0);
+      declare(zfinder, "ZFinder");
 
       // Book histograms
       for (int i = 0; i < N_PT_BIN_EDGES - 1; i++) {
@@ -80,6 +80,14 @@ namespace Rivet {
     /// Perform the per-event analysis
     void analyze(const Event& event) {
       Particles fs_particles = apply<FinalState>(event, "fs_particles").particles();
+      
+      if (DEBUG_LEVEL > 0) {
+        int nmuons = 0;
+          for (const Particle& p : fs_particles) {
+            if (abs(p.pid()) == 13) nmuons++;
+          }
+          std::cout << "fs size: " << fs_particles.size() << " | muons: " << nmuons << std::endl;
+      }
 
       // The final-state particles declared above are clustered using FastJet with
       // the anti-kT algorithm and a jet-radius parameter 0.5
@@ -93,28 +101,47 @@ namespace Rivet {
       ClusterSequence cs(trimmed_particles, jet_def);
       std::vector<PseudoJet> jets = sorted_by_pt(cs.inclusive_jets());
 
-      // Retrieve *decayed* Z bosons
-      Particles decayed_Z_bosons = apply<UnstableParticles>(event, "decayed_Z_bosons").particles();
-      if (DEBUG_LEVEL > 0) std::cout << "Unstable Z count = " << decayed_Z_bosons.size() << std::endl;
-      Particles Z_bosons;  // Z bosons which decayed to mu+ mu-
-      for (const Particle& decayed_Z_boson : decayed_Z_bosons) {
-        std::cout << "Children: " << decayed_Z_boson.children().size() << std::endl;
-        Z_bosons.push_back(decayed_Z_boson);
-      }
+      // Retrieve *decayed* Z bosons and muon children
+      const ZFinder& zfinder = apply<ZFinder>(event, "ZFinder");
+      if (zfinder.bosons().empty()) vetoEvent;
 
-      if (Z_bosons.empty()) { vetoEvent; }
+      const Particle& Z_boson = zfinder.bosons()[0];
+      const Particles& muons = zfinder.constituents();  // mu+ and mu-
+
+      // Check Z pT
+      if ((Z_boson.pT() < PT_MIN_ZBOSONS) || (Z_boson.pT() > PT_MAX_ZBOSONS)) vetoEvent;
+
+      Particles Z_bosons = {Z_boson};
 
       // Retrieve clustered jets, sorted by pT, with applied rapidity and pT cuts
       fastjet::Selector jet_selector = fastjet::SelectorPtRange(PT_MIN_JETS, PT_MAX_JETS) && fastjet::SelectorEtaRange(ETA_MIN_JETS, ETA_MAX_JETS);
       jets = jet_selector(jets);
       if (jets.empty()) { vetoEvent; }
 
-      // Create a vector of jets that are back to back with a Z boson
+      // Create a vector of jets that are back to back with a Z boson, with no muons in jet cone
       Jets Z_jets;
       for (const Jet& jet : jets) {
         for (const Particle& Z_boson : Z_bosons) {
-          if (deltaPhi(Z_boson, jet) > (7*M_PI)/8) {
+          bool muon_in_jet = false;
+          for (const Particle& muon : muons) {
+            if (deltaR(muon, jet) < JET_R) {
+              muon_in_jet = true;
+              break;
+            }
+          }
+          if (muon_in_jet) continue;
+          if (deltaPhi(Z_boson, jet) > (7*M_PI)/8) {  // Azimuthal cut
             Z_jets.push_back(jet);
+            // Recording the number of jets in each bin, for scaling purposes
+            if ((jet.pT() >= 20.) && (jet.pT() < 30.)) {
+              num_jets_20_30 += 1;
+            }
+            else if ((jet.pT() >= 30.) && (jet.pT() < 50.)) {
+              num_jets_30_50 += 1;
+            }
+            else if ((jet.pT() >= 50.) && (jet.pT() < 100.)) {
+              num_jets_50_100 += 1;
+            }
             if (DEBUG_LEVEL > 0) std::cout << "deltaphi: " << deltaPhi(Z_boson, jet) << std::endl;
             if (DEBUG_LEVEL > 0) std::cout << "jet eta: " << jet.eta() << std::endl;
             if (DEBUG_LEVEL > 0) std::cout << "jet pt: " << jet.pT() << std::endl;
@@ -136,7 +163,7 @@ namespace Rivet {
         if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) &&
             ((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
             (constituent.pt() > PT_MIN_HADRONS) &&
-            (std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2.0) < 0.5)) {
+            (std::sqrt(std::pow(Z_jet.pseudojet().phi()-constituent.phi(), 2.0) + std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2.0)) < 0.5)) {
           double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
           double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
           double num_jt = std::sqrt(std::pow(Z_jet.pseudojet().py()*constituent.pz()-Z_jet.pseudojet().pz()*constituent.py(), 2.0)
@@ -156,16 +183,20 @@ namespace Rivet {
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////
-    /// Normalise histograms etc., after the run
+    /// Scale histograms etc., after the run
     void finalize() {
-
       for (int i = 0; i < N_PT_BIN_EDGES - 1; i++) {
         std::string pT_name = std::to_string(PT_BIN_EDGES[i]) + '_' + std::to_string(PT_BIN_EDGES[i+1]);
-
-        normalize(_h["unfold1d_z_" + pT_name]);  // HEPData Table 0-2
-        normalize(_h["unfold1d_jt_" + pT_name]);  // HEPData Table 3-5
-        normalize(_h["unfold1d_r_" + pT_name]);  // HEPData Table 6-8
+        double njet = 0.;
+        if (PT_BIN_EDGES[i] == 20) njet = num_jets_20_30;
+        if (PT_BIN_EDGES[i] == 30) njet = num_jets_30_50;
+        if (PT_BIN_EDGES[i] == 50) njet = num_jets_50_100;
+        if (njet == 0.) continue;
+        scale(_h["unfold1d_z_" + pT_name], 1.0/njet);  // HEPData Table 0-2
+        scale(_h["unfold1d_jt_" + pT_name], 1.0/njet);  // HEPData Table 3-5
+        scale(_h["unfold1d_r_" + pT_name], 1.0/njet);  // HEPData Table 6-8
       }
+
       return;
     }
 
@@ -208,6 +239,9 @@ namespace Rivet {
     const double ETA_MAX_JETS = 4.;        // Max "
     const double PT_MIN_JETS = 20.;        // Min jet transverse momentum
     const double PT_MAX_JETS = 100.;       // Max "
+    double num_jets_20_30 = 0.;            // Total number of Z-tagged jets from the 20<pT<30 GeV bin
+    double num_jets_30_50 = 0.;            // " 30<pT<50 GeV bin
+    double num_jets_50_100 = 0.;           // " 50<pT<100 GeV bin
 
     // Z Boson
     const double MASS_MIN_ZBOSONS = 60.;   // Min invariant mass of Z bosons
