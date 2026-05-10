@@ -105,13 +105,8 @@ namespace Rivet {
       const ZFinder& zfinder = apply<ZFinder>(event, "ZFinder");
       if (zfinder.bosons().empty()) vetoEvent;
 
-      const Particle& Z_boson = zfinder.bosons()[0];
+      const Particles& Z_bosons = zfinder.bosons();
       const Particles& muons = zfinder.constituents();  // mu+ and mu-
-
-      // Check Z pT
-      if ((Z_boson.pT() < PT_MIN_ZBOSONS) || (Z_boson.pT() > PT_MAX_ZBOSONS)) vetoEvent;
-
-      Particles Z_bosons = {Z_boson};
 
       // Retrieve clustered jets, sorted by pT, with applied rapidity and pT cuts
       fastjet::Selector jet_selector = fastjet::SelectorPtRange(PT_MIN_JETS, PT_MAX_JETS) && fastjet::SelectorEtaRange(ETA_MIN_JETS, ETA_MAX_JETS);
@@ -122,6 +117,7 @@ namespace Rivet {
       Jets Z_jets;
       for (const Jet& jet : jets) {
         for (const Particle& Z_boson : Z_bosons) {
+          if ((Z_boson.pT() < PT_MIN_ZBOSONS) || (Z_boson.pT() > PT_MAX_ZBOSONS)) vetoEvent; // Check Z pT
           bool muon_in_jet = false;
           for (const Particle& muon : muons) {
             if (deltaR(muon, jet) < JET_R) {
@@ -161,9 +157,9 @@ namespace Rivet {
         // Fill histograms
         if (DEBUG_LEVEL > 1) std::cout << "Filling histograms" << std::endl;
         if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) &&
-            ((abs(myinfo.get_pid()) == 211) || (abs(myinfo.get_pid()) == 321) || (abs(myinfo.get_pid()) == 2212)) &&
+            ((abs(myinfo.get_pid()) == PID::PIPLUS) || (abs(myinfo.get_pid()) == PID::KPLUS) || (abs(myinfo.get_pid()) == PID::PROTON)) &&
             (constituent.pt() > PT_MIN_HADRONS) &&
-            (std::sqrt(std::pow(Z_jet.pseudojet().phi()-constituent.phi(), 2.0) + std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2.0)) < 0.5)) {
+            (std::sqrt(std::pow(Z_jet.pseudojet().phi()-constituent.phi(), 2) + std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2)) < JET_R)) {
           double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
           double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
           double num_jt = std::sqrt(std::pow(Z_jet.pseudojet().py()*constituent.pz()-Z_jet.pseudojet().pz()*constituent.py(), 2.0)
