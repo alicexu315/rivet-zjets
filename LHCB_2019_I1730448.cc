@@ -117,7 +117,7 @@ namespace Rivet {
       Jets Z_jets;
       for (const Jet& jet : jets) {
         for (const Particle& Z_boson : Z_bosons) {
-          if ((Z_boson.pT() < PT_MIN_ZBOSONS) || (Z_boson.pT() > PT_MAX_ZBOSONS)) vetoEvent; // Check Z pT
+          if ((Z_boson.pT() < PT_MIN_ZBOSONS) || (Z_boson.pT() > PT_MAX_ZBOSONS)) continue; // Check Z pT
           bool muon_in_jet = false;
           for (const Particle& muon : muons) {
             if (deltaR(muon, jet) < JET_R) {
@@ -159,14 +159,14 @@ namespace Rivet {
         if ((std::sqrt(constituent.modp2()) > P_MIN_HADRONS) && (std::sqrt(constituent.modp2()) < P_MAX_HADRONS) &&
             ((abs(myinfo.get_pid()) == PID::PIPLUS) || (abs(myinfo.get_pid()) == PID::KPLUS) || (abs(myinfo.get_pid()) == PID::PROTON)) &&
             (constituent.pt() > PT_MIN_HADRONS) &&
-            (std::sqrt(std::pow(Z_jet.pseudojet().phi()-constituent.phi(), 2) + std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2)) < JET_R)) {
+            (std::sqrt(std::pow(Z_jet.pseudojet().delta_phi_to(constituent), 2) + std::pow(Z_jet.pseudojet().eta()-constituent.eta(), 2)) < JET_R)) {
           double num_z = Z_jet.pseudojet().px()*constituent.px() + Z_jet.pseudojet().py()*constituent.py() + Z_jet.pseudojet().pz()*constituent.pz();
           double den_z = Z_jet.pseudojet().px()*Z_jet.pseudojet().px() + Z_jet.pseudojet().py()*Z_jet.pseudojet().py() + Z_jet.pseudojet().pz()*Z_jet.pseudojet().pz();
-          double num_jt = std::sqrt(std::pow(Z_jet.pseudojet().py()*constituent.pz()-Z_jet.pseudojet().pz()*constituent.py(), 2.0)
-           + std::pow(Z_jet.pseudojet().pz()*constituent.px()-Z_jet.pseudojet().px()*constituent.pz(), 2.0)
-           + std::pow(Z_jet.pseudojet().px()*constituent.py()-Z_jet.pseudojet().py()*constituent.px(), 2.0));
-          double den_jt = std::sqrt(std::pow(Z_jet.pseudojet().px(), 2.0) + std::pow(Z_jet.pseudojet().py(), 2.0) + std::pow(Z_jet.pseudojet().pz(), 2.0));
-          double r = std::sqrt(std::pow(Z_jet.pseudojet().delta_phi_to(constituent), 2.0) + std::pow(Z_jet.pseudojet().rap()-constituent.rap(), 2.0));
+          double num_jt = std::sqrt(std::pow(Z_jet.pseudojet().py()*constituent.pz()-Z_jet.pseudojet().pz()*constituent.py(), 2)
+           + std::pow(Z_jet.pseudojet().pz()*constituent.px()-Z_jet.pseudojet().px()*constituent.pz(), 2)
+           + std::pow(Z_jet.pseudojet().px()*constituent.py()-Z_jet.pseudojet().py()*constituent.px(), 2));
+          double den_jt = std::sqrt(std::pow(Z_jet.pseudojet().px(), 2) + std::pow(Z_jet.pseudojet().py(), 2) + std::pow(Z_jet.pseudojet().pz(), 2));
+          double r = std::sqrt(std::pow(Z_jet.pseudojet().delta_phi_to(constituent), 2) + std::pow(Z_jet.pseudojet().rap()-constituent.rap(), 2));
           _h[get_histo_name(Z_jet.pT(), true, false, false)]->fill(num_z / den_z); // Fill histogram with longitudinal momentum
           _h[get_histo_name(Z_jet.pT(), false, true, false)]->fill(num_jt / den_jt); // Fill histogram with transverse momentum
           _h[get_histo_name(Z_jet.pT(), false, false, true)]->fill(r); // Fill histogram with radial profile distribution
